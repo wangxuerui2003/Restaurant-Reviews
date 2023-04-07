@@ -1,5 +1,5 @@
 import express from "express"
-import cors from "cors"
+import cors from "cors" // Cross-Origin Resources Sharing, in my opinion some kind of security for send/receive data between different origins (domains)
 import restaurants from "./api/restaurants.route.js"
 
 const app = express();
