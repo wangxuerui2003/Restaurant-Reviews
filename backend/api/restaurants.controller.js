@@ -40,4 +40,47 @@ export default class RestaurantsController {
 		}
 		res.json(response);
 	}
+
+	/**
+	 * Get the restaurant info by it's id.
+	 * Extract the restaurant_id from req.params (e.g. /:id)
+	 * and get the restaurant info by calling the getRestaurantByID method in the RestaurantsDAO class
+	 * 
+	 * @param {*} req 
+	 * @param {*} res 
+	 * @param {*} next 
+	 * @returns 
+	 */
+	static async apiGetRestaurantById(req, res, next) {
+		try {
+			let id = req.params.id || {};
+			let restaurant = await RestaurantsDAO.getRestaurantByID(id);
+			if (!restaurant) {
+				res.status(404).json({ error: "Not found" });
+				return ;
+			}
+			res.json(restaurant);
+		} catch (e) {
+			console.log(`api, ${e}`);
+			res.status(500).json({ error: e });
+		}
+	}
+
+	/**
+	 * Get all cuisines.
+	 * By calling the getCuisines method in the RestaurantsDAO class.
+	 * 
+	 * @param {*} req 
+	 * @param {*} res 
+	 * @param {*} next 
+	 */
+	static async apiGetRestaurantCuisines(req, res, next) {
+		try {
+			let cuisines = await RestaurantsDAO.getCuisines();
+			res.json(cuisines);
+		} catch (e) {
+			console.log(`api, ${e}`);
+			res.status(500).json({ error: e });
+		}
+	}
 }
