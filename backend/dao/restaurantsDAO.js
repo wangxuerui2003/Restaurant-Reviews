@@ -1,3 +1,14 @@
+/**
+ * DAO stands for Data Access Object.
+ * 1. DAO provides an abstraction layer for accessing data from a database or other data sources.
+ * 2. DAO separates the other web application logics from the details of data access, 
+ * 		which can be a very good abstraction and encapsulation.
+ * 3. DAO improves code organization, maintainability and testability.
+ */
+
+import mongodb from "mongodb"
+const ObjectId = mongodb.ObjectId;
+
 // Reference to the database
 let restaurants;
 
@@ -13,7 +24,7 @@ export default class RestaurantsDAO {
 		try {
 			restaurants = await conn.db(process.env.RESTREVIEWS_NS).collection('restaurants');
 		} catch (e) {
-			console.error(`Unable to establish a collection handle in restaurantsDAO: ${e}`)
+			console.error(`Unable to establish collection handles in restaurantsDAO: ${e}`)
 		}
 	}
 
@@ -68,4 +79,69 @@ export default class RestaurantsDAO {
 		}
 	}
 
+	/**
+	 * Get the restaurant's info with the id of restaurant_id through this complicated pipeline which I have no idea what it is doing.
+	 * 
+	 * @param {*} id 
+	 * @returns 
+	 */
+	static async getRestaurantByID(id) {
+		try {
+			const pipeline = [
+				{
+					$match: {
+						_id: new ObjectId(id)
+					}
+				},
+				{
+					$lookup: {
+						from: "reviews",
+						let: {
+							id: "$_id"
+						},
+						pipeline: [
+							{
+								$match: {
+									$expr: {
+										$eq: ["$restaurant_id", "$$id"]
+									}
+								}
+							},
+							{
+								$sort: {
+									date: -1
+								}
+							}
+						],
+						as: "reviews"
+					}
+				},
+				{
+					$addFields: {
+						reviews: "$reviews"
+					}
+				}
+			];
+		return await restaurants.aggregate(pipeline).next();
+		} catch (e) {
+			console.error(`Something went wrong in getRestaurantByID: ${e}`);
+			throw e;
+		}
+	}
+
+	/**
+	 * Get all cuisines by querying all the distince cuisines from the restaurant collection in the database.
+	 * 
+	 * @returns 
+	 */
+	static async getCuisines() {
+		let cuisines = [];
+		try {
+			cuisines = await restaurants.distinct("cuisine");
+			return cuisines;
+		} catch (e) {
+			console.error(`Unable to get cuisines, ${e}`);
+			return cuisines;
+		}
+	}
 }
